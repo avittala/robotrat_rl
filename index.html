@@ -134,9 +134,11 @@
       let x = 0;
       let y = 0;
       let angle = 0; // degrees, 0 = facing up
+      let speed = 0; // current velocity in pixels per frame
 
-      const step = 10;      // movement per click
-      const turnStep = 15;  // rotation per click
+      const maxSpeed = 3;   // maximum speed
+      const speedStep = 0.3; // speed increment per button press
+      const turnStep = 15;   // rotation per click
 
       function updateTransform() {
         robot.style.transform =
@@ -146,29 +148,26 @@
       function clampWithinField() {
         const fieldWidth = field.clientWidth;
         const fieldHeight = field.clientHeight;
-        const halfRobot = 15; // half of 30px
 
-        const maxX = fieldWidth / 2 - halfRobot;
-        const maxY = fieldHeight / 2 - halfRobot;
-
-        x = Math.max(-maxX, Math.min(maxX, x));
-        y = Math.max(-maxY, Math.min(maxY, y));
+        // Toroidal wrapping: position wraps around to the opposite side
+        x = ((x + fieldWidth / 2) % fieldWidth) - fieldWidth / 2;
+        y = ((y + fieldHeight / 2) % fieldHeight) - fieldHeight / 2;
       }
 
-      function moveForward() {
+      function updatePosition() {
         const rad = (angle - 90) * Math.PI / 180;
-        x += Math.cos(rad) * step;
-        y += Math.sin(rad) * step;
+        x += Math.cos(rad) * speed;
+        y += Math.sin(rad) * speed;
         clampWithinField();
         updateTransform();
       }
 
-      function moveBackward() {
-        const rad = (angle - 90) * Math.PI / 180;
-        x -= Math.cos(rad) * step;
-        y -= Math.sin(rad) * step;
-        clampWithinField();
-        updateTransform();
+      function increaseSpeed() {
+        speed = Math.min(maxSpeed, speed + speedStep);
+      }
+
+      function decreaseSpeed() {
+        speed = Math.max(-maxSpeed, speed - speedStep);
       }
 
       function turnLeft() {
@@ -181,10 +180,13 @@
         updateTransform();
       }
 
+      // Game loop: update position every frame
+      setInterval(updatePosition, 50);
+
       document.getElementById("btn-forward")
-        .addEventListener("click", moveForward);
+        .addEventListener("click", increaseSpeed);
       document.getElementById("btn-backward")
-        .addEventListener("click", moveBackward);
+        .addEventListener("click", decreaseSpeed);
       document.getElementById("btn-left")
         .addEventListener("click", turnLeft);
       document.getElementById("btn-right")
