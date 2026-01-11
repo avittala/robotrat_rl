@@ -15,7 +15,7 @@
     }
 
     #robot-app {
-      max-width: 360px;
+      max-width: 600px;
       width: 100%;
       background: #ffffff;
       border-radius: 8px;
@@ -33,8 +33,8 @@
 
     #playfield {
       position: relative;
-      width: 220px;
-      height: 220px;
+      width: 440px;
+      height: 440px;
       margin: 0 auto 1rem;
       border: 2px solid #ccc;
       background: #fafafa;
@@ -53,7 +53,6 @@
       left: 50%;
       transform: translate(-50%, -50%) rotate(0deg);
       transform-origin: 50% 50%;
-      transition: transform 0.12s ease-out;
     }
 
     /* Little “eye” to show direction */
@@ -112,16 +111,16 @@
 
     <div id="controls">
       <div></div>
-      <button id="btn-forward">Forward</button>
+      <button id="btn-faster">Faster</button>
       <div></div>
 
       <button id="btn-left">Turn Left</button>
-      <button id="btn-backward">Backward</button>
+      <button id="btn-slower">Slower</button>
       <button id="btn-right">Turn Right</button>
     </div>
 
     <div id="hint">
-      Click the buttons to move and rotate the robot.
+      Click the buttons to control speed and rotate the robot.
     </div>
   </div>
 
@@ -136,8 +135,9 @@
       let angle = 0; // degrees, 0 = facing up
       let speed = 0; // current velocity in pixels per frame
 
-      const maxSpeed = 3;   // maximum speed
-      const speedStep = 0.3; // speed increment per button press
+
+      const maxSpeed = 6;   // maximum speed
+      const speedStep = 0.6; // speed increment per button press
       const turnStep = 15;   // rotation per click
 
       function updateTransform() {
@@ -150,11 +150,32 @@
         const fieldHeight = field.clientHeight;
 
         // Toroidal wrapping: position wraps around to the opposite side
-        x = ((x + fieldWidth / 2) % fieldWidth) - fieldWidth / 2;
-        y = ((y + fieldHeight / 2) % fieldHeight) - fieldHeight / 2;
+        
+        if (x > fieldWidth / 2 + 40) x -= fieldWidth+40;
+        if (x < -fieldWidth / 2 - 40) x += fieldWidth+40;
+        if (y > fieldHeight / 2 + 40) y -= fieldHeight+40;
+        if (y < -fieldHeight / 2 - 40) y += fieldHeight+40;
+      }
 
-        if (x < -fieldWidth / 2) x += fieldWidth;
-        if (y < -fieldHeight / 2) y += fieldHeight;
+      function loop() {
+        updatePosition();
+        randomStateUpdate();
+      }
+
+      function randomStateUpdate() {
+        if (Math.random() < 0.1) {
+          // Randomly change speed or angle occasionally
+          let seed = Math.random();
+          if (seed < 0.25 && speed < 2*maxSpeed/3) {
+            increaseSpeed();
+          } else if (seed < 0.5 && speed > maxSpeed/3) {
+            decreaseSpeed();
+          } else if (seed < 0.75) {
+            turnLeft();
+          } else {
+            turnRight();
+          }
+        }
       }
 
       function updatePosition() {
@@ -170,7 +191,7 @@
       }
 
       function decreaseSpeed() {
-        speed = Math.max(-maxSpeed, speed - speedStep);
+        speed = Math.max(0, speed - speedStep);
       }
 
       function turnLeft() {
@@ -184,16 +205,38 @@
       }
 
       // Game loop: update position every frame
-      setInterval(updatePosition, 50);
+      setInterval(loop, 50);
 
-      document.getElementById("btn-forward")
+      document.getElementById("btn-faster")
         .addEventListener("click", increaseSpeed);
-      document.getElementById("btn-backward")
+      document.getElementById("btn-slower")
         .addEventListener("click", decreaseSpeed);
       document.getElementById("btn-left")
         .addEventListener("click", turnLeft);
       document.getElementById("btn-right")
         .addEventListener("click", turnRight);
+
+      // Keyboard controls
+      document.addEventListener("keydown", (event) => {
+        switch (event.key) {
+          case "ArrowUp":
+            increaseSpeed();
+            event.preventDefault();
+            break;
+          case "ArrowDown":
+            decreaseSpeed();
+            event.preventDefault();
+            break;
+          case "ArrowLeft":
+            turnLeft();
+            event.preventDefault();
+            break;
+          case "ArrowRight":
+            turnRight();
+            event.preventDefault();
+            break;
+        }
+      });
     })();
   </script>
 </body>
