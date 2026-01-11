@@ -152,6 +152,9 @@
         // Toroidal wrapping: position wraps around to the opposite side
         x = ((x + fieldWidth / 2) % fieldWidth) - fieldWidth / 2;
         y = ((y + fieldHeight / 2) % fieldHeight) - fieldHeight / 2;
+
+        if (x < -fieldWidth / 2) x += fieldWidth;
+        if (y < -fieldHeight / 2) y += fieldHeight;
       }
 
       function updatePosition() {
